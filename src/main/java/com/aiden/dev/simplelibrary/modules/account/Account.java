@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter @Setter @EqualsAndHashCode(of = "id")
@@ -25,7 +26,7 @@ public class Account {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, columnDefinition = "tinyint(1) default 0")
+    @Column(nullable = false)
     private Boolean emailVerified;
 
     private String emailCheckToken;
@@ -37,9 +38,13 @@ public class Account {
     @Lob
     private String profileImage;
 
-    @Column(nullable = false, columnDefinition = "tinyint(1) default 1")
-    private Boolean notificationEmail;
+    private Boolean notificationEmail = true;
 
-    @Column(nullable = false, columnDefinition = "tinyint(1) default 1")
-    private Boolean notificationWeb;
+    private Boolean notificationWeb = true;
+
+    public void generateEmailCheckToken() {
+        this.emailVerified = false;
+        this.emailCheckToken = UUID.randomUUID().toString();
+        this.emailCheckTokenGeneratedAt = LocalDateTime.now();
+    }
 }
