@@ -9,7 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,6 +20,7 @@ class AccountControllerTest {
 
     @Autowired MockMvc mockMvc;
     @MockBean SignUpFormValidator signUpFormValidator;
+    @MockBean AccountService accountService;
     
     @DisplayName("회원가입 페이지 보이는지 확인")
     @Test
@@ -62,5 +63,7 @@ class AccountControllerTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"));
+
+        verify(accountService, times(1)).createAccount(any());
     }
 }
