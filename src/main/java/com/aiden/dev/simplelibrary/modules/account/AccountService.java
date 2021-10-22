@@ -40,4 +40,8 @@ public class AccountService {
                 .build();
         emailService.sendEmail(emailMessage);
     }
+
+    public Account findAccountByEmail(String email) {
+        return accountRepository.findByEmail(email).orElse(null);
+    }
 }

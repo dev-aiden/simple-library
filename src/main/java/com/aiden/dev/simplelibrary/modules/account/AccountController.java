@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.Optional;
+
 @Controller
 @RequiredArgsConstructor
 public class AccountController {
 
     private final SignUpFormValidator signUpFormValidator;
     private final AccountService accountService;
+    private final AccountRepository accountRepository;
 
     @InitBinder
     public void initBinder(WebDataBinder webDataBinder) {
@@ -38,5 +41,23 @@ public class AccountController {
 
         accountService.createAccount(signUpForm);
         return "redirect:/";
+    }
+
+    @GetMapping("/check-email-token")
+    public String checkEmailToken(String token, String email, Model model) {
+        Account account = accountService.findAccountByEmail(email);
+
+        if(account == null) {
+            model.addAttribute("error", "wrong.email");
+            return "account/checked-email";
+        }
+
+        if(!account.isValidToken(token)) {
+            model.addAttribute("error", "wrong.token");
+            return "account/checked-email";
+        }
+
+        account.completeSignUp();
+        return "account/checked-email";
     }
 }
