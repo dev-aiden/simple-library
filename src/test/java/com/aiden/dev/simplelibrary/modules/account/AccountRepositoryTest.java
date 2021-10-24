@@ -46,6 +46,13 @@ class AccountRepositoryTest {
         assertThat(accountRepository.existsByEmail("test2@email.com")).isFalse();
     }
 
+    @DisplayName("LoginId로 계정 조회 쿼리 테스트")
+    @Test
+    void findByLoginId() {
+        assertThat(accountRepository.findByLoginId("test")).isNotEmpty();
+        assertThat(accountRepository.findByLoginId("test2")).isEmpty();
+    }
+
     @DisplayName("Email로 계정 조회 쿼리 테스트")
     @Test
     void findByEmail() {

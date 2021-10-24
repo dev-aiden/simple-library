@@ -2,17 +2,20 @@ package com.aiden.dev.simplelibrary;
 
 import com.aiden.dev.simplelibrary.modules.account.Account;
 import com.aiden.dev.simplelibrary.modules.account.AccountRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import com.aiden.dev.simplelibrary.modules.account.AccountService;
+import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.TestExecutionEvent;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -21,32 +24,48 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 @DisplayName("통합 테스트")
 public class IntegrationTest {
 
     @Autowired MockMvc mockMvc;
+    @Autowired AccountService accountService;
     @Autowired AccountRepository accountRepository;
 
     @BeforeEach
     void beforeEach() {
-        Account account = Account.builder()
-                .loginId("aiden")
-                .password("aiden1234")
-                .nickname("aiden")
-                .email("aiden@email.com")
-                .emailCheckToken("aidenToken")
-                .emailVerified(false)
-                .build();
-        accountRepository.save(account);
+        SignUpForm signUpForm = new SignUpForm();
+        signUpForm.setLoginId("aiden");
+        signUpForm.setNickname("aiden");
+        signUpForm.setEmail("aiden@email.com");
+        signUpForm.setPassword("12345678");
+        accountService.createAccount(signUpForm);
     }
 
-    @DisplayName("index 페이지 테스트")
+    @AfterEach
+    void afterEach() {
+        accountRepository.deleteAll();
+    }
+
+    @DisplayName("index 페이지 테스트 - 비회원")
     @Test
-    void home() throws Exception {
+    void home_non_member() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"))
                 .andExpect(unauthenticated());
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("index 페이지 테스트 - 회원")
+    @Test
+    void home_member() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(view().name("index"))
+                .andExpect(authenticated().withUsername("aiden"));
     }
 
     @DisplayName("회원 가입 폼 테스트")
@@ -86,7 +105,7 @@ public class IntegrationTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"))
-                .andExpect(unauthenticated());
+                .andExpect(authenticated().withUsername("test"));
 
         assertThat(accountRepository.existsByLoginId("test")).isTrue();
     }
@@ -100,7 +119,8 @@ public class IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("error"))
                 .andExpect(model().attribute("error", "wrong.email"))
-                .andExpect(view().name("account/checked-email"));
+                .andExpect(view().name("account/checked-email"))
+                .andExpect(unauthenticated());
     }
 
     @DisplayName("이메일 인증 테스트 - 잘못된 토큰")
@@ -113,18 +133,22 @@ public class IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("error"))
                 .andExpect(model().attribute("error", "wrong.token"))
-                .andExpect(view().name("account/checked-email"));
+                .andExpect(view().name("account/checked-email"))
+                .andExpect(unauthenticated());
     }
 
     @DisplayName("이메일 인증 테스트")
     @Test
     void checkEmailToken() throws Exception {
+        Account account = accountRepository.findByLoginId("aiden").orElseThrow();
+
         mockMvc.perform(get("/check-email-token")
-                        .param("token", "aidenToken")
+                        .param("token", account.getEmailCheckToken())
                         .param("email", "aiden@email.com"))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeDoesNotExist("error"))
-                .andExpect(view().name("account/checked-email"));
+                .andExpect(view().name("account/checked-email"))
+                .andExpect(authenticated().withUsername("aiden"));
 
         assertThat(accountRepository.findByEmail("aiden@email.com").get().getEmailVerified()).isTrue();
     }
