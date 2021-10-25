@@ -48,12 +48,16 @@ public class Account {
         this.emailCheckTokenGeneratedAt = LocalDateTime.now();
     }
 
-    public Boolean isValidToken(String token) {
+    public boolean isValidToken(String token) {
         return this.emailCheckToken.equals(token);
     }
 
     public void completeSignUp() {
         this.emailVerified = true;
         this.joinedAt = LocalDateTime.now();
+    }
+
+    public boolean isPossibleSendConfirmEmail() {
+        return this.getEmailCheckTokenGeneratedAt().isBefore(LocalDateTime.now().minusHours(1));
     }
 }

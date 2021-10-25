@@ -13,8 +13,10 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AccountController.class)
@@ -114,5 +116,49 @@ class AccountControllerTest {
                 .andExpect(view().name("account/checked-email"));
 
         then(accountService).should().login(any());
+    }
+
+    @DisplayName("인증 메일 페이지 테스트 - 비회원")
+    @Test
+    void checkEmail_non_member() throws Exception {
+        mockMvc.perform(get("/check-email"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @WithAccount(loginId = "aiden")
+    @DisplayName("인증 메일 페이지 테스트 - 회원")
+    @Test
+    void checkEmail_member() throws Exception {
+        mockMvc.perform(get("/check-email"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("email"))
+                .andExpect(view().name("account/check-email"))
+                .andExpect(authenticated().withUsername("aiden"));
+    }
+
+    @WithAccount(loginId = "aiden")
+    @DisplayName("인증 메일 재발송 확인 - 1시간 이내 재발송")
+    @Test
+    void resendConfirmEmail_before_1_hour() throws Exception {
+        mockMvc.perform(get("/resend-confirm-email"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("error"))
+                .andExpect(model().attributeExists("email"))
+                .andExpect(view().name("account/check-email"));
+    }
+
+    @WithAccount(loginId = "aiden", minusHoursForEmailCheckToken = 2L)
+    @DisplayName("인증 메일 재발송 확인 - 1시간 이후 재발송")
+    @Test
+    void resendConfirmEmail_after_1_hour() throws Exception {
+        mockMvc.perform(get("/resend-confirm-email"))
+                .andDo(print())
+                .andExpect(status().is3xxRedirection())
+                .andExpect(model().attributeDoesNotExist("error"))
+                .andExpect(model().attributeDoesNotExist("email"))
+                .andExpect(view().name("redirect:/"));
+
+        then(accountService).should().sendSignUpConfirmEmail(any());
     }
 }

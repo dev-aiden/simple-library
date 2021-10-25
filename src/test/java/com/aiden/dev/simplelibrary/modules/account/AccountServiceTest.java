@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
@@ -72,6 +74,22 @@ class AccountServiceTest {
 
         // then
         then(accountRepository).should().findByEmail("test@email.com");
+    }
+
+    @DisplayName("회원가입 인증 메일 발송 테스트")
+    @Test
+    void sendSignUpConfirmEmail() {
+        // Given
+        Account account = Account.builder()
+                .loginId("test")
+                .password("test1234")
+                .build();
+
+        // When
+        accountService.sendSignUpConfirmEmail(account);
+
+        // Then
+        then(emailService).should().sendEmail(any());
     }
 
     @DisplayName("로그인 테스트")

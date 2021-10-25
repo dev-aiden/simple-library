@@ -3,6 +3,7 @@ package com.aiden.dev.simplelibrary;
 import com.aiden.dev.simplelibrary.modules.account.Account;
 import com.aiden.dev.simplelibrary.modules.account.AccountRepository;
 import com.aiden.dev.simplelibrary.modules.account.AccountService;
+import com.aiden.dev.simplelibrary.modules.account.WithAccount;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,12 +14,17 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -41,11 +47,6 @@ public class IntegrationTest {
         signUpForm.setEmail("aiden@email.com");
         signUpForm.setPassword("12345678");
         accountService.createAccount(signUpForm);
-    }
-
-    @AfterEach
-    void afterEach() {
-        accountRepository.deleteAll();
     }
 
     @DisplayName("index 페이지 테스트 - 비회원")
@@ -91,6 +92,8 @@ public class IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("account/sign-up"))
                 .andExpect(unauthenticated());
+
+        assertThat(accountRepository.findByLoginId("test")).isEmpty();
     }
 
     @DisplayName("회원 가입 테스트")
@@ -107,7 +110,11 @@ public class IntegrationTest {
                 .andExpect(redirectedUrl("/"))
                 .andExpect(authenticated().withUsername("test"));
 
-        assertThat(accountRepository.existsByLoginId("test")).isTrue();
+        Account account = accountRepository.findByLoginId("test").orElseThrow();
+        assertThat(account.getPassword()).isNotEqualTo("test1234");
+        assertThat(account.getNickname()).isEqualTo("test");
+        assertThat(account.getEmail()).isEqualTo("test@email.com");
+        assertThat(account.getEmailCheckToken()).isNotNull();
     }
 
     @DisplayName("이메일 인증 테스트 - 잘못된 이메일")
@@ -151,5 +158,34 @@ public class IntegrationTest {
                 .andExpect(authenticated().withUsername("aiden"));
 
         assertThat(accountRepository.findByEmail("aiden@email.com").get().getEmailVerified()).isTrue();
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("인증 메일 재발송 확인 - 1시간 이내 재발송")
+    @Test
+    void resendConfirmEmail_before_1_hour() throws Exception {
+        mockMvc.perform(get("/resend-confirm-email"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(view().name("account/check-email"))
+                .andExpect(model().attributeExists("error"))
+                .andExpect(model().attributeExists("email"))
+                .andExpect(authenticated().withUsername("aiden"));
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("인증 메일 재발송 확인 - 1시간 이후 재발송")
+    @Test
+    void resendConfirmEmail_after_1_hour() throws Exception {
+        Account account = accountRepository.findByLoginId("aiden").orElseThrow();
+        account.setEmailCheckTokenGeneratedAt(LocalDateTime.now().minusHours(2L));
+
+        mockMvc.perform(get("/resend-confirm-email"))
+                .andDo(print())
+                .andExpect(status().is3xxRedirection())
+                .andExpect(model().attributeDoesNotExist("error"))
+                .andExpect(model().attributeDoesNotExist("email"))
+                .andExpect(view().name("redirect:/"))
+                .andExpect(authenticated().withUsername("aiden"));
     }
 }

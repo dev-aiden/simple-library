@@ -40,7 +40,7 @@ public class AccountService implements UserDetailsService {
         return accountRepository.save(account);
     }
 
-    private void sendSignUpConfirmEmail(Account account) {
+    public void sendSignUpConfirmEmail(Account account) {
         EmailMessage emailMessage = EmailMessage.builder()
                 .to(account.getEmail())
                 .subject("Simple Library 회원가입 인증")
