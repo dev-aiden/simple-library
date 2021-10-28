@@ -3,7 +3,6 @@ package com.aiden.dev.simplelibrary;
 import com.aiden.dev.simplelibrary.modules.account.Account;
 import com.aiden.dev.simplelibrary.modules.account.AccountRepository;
 import com.aiden.dev.simplelibrary.modules.account.AccountService;
-import com.aiden.dev.simplelibrary.modules.account.WithAccount;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
