@@ -64,7 +64,17 @@ public class AccountService implements UserDetailsService {
     @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
-        Account account = accountRepository.findByLoginId(loginId).orElseThrow(() -> new UsernameNotFoundException(loginId));
+        Account account = accountRepository.findByLoginId(loginId).orElseThrow(() ->
+                new UsernameNotFoundException(loginId));
         return new UserAccount(account);
+    }
+
+    public void completeSignUp(Account account) {
+        account.completeSignUp();
+        login(account);
+    }
+
+    public Account findAccountByNickname(String nickname) {
+        return accountRepository.findByNickname(nickname).orElse(null);
     }
 }

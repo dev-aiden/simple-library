@@ -3,6 +3,7 @@ package com.aiden.dev.simplelibrary;
 import com.aiden.dev.simplelibrary.modules.account.Account;
 import com.aiden.dev.simplelibrary.modules.account.AccountRepository;
 import com.aiden.dev.simplelibrary.modules.account.AccountService;
+import com.aiden.dev.simplelibrary.modules.account.WithAccount;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
@@ -221,5 +225,43 @@ public class IntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"))
                 .andExpect(unauthenticated());
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("아이디로 프로필 페이지 보이는지 확인 - 다른 사용자 아이디")
+    @Test
+    void viewProfileAccountOwner_other_account() {
+        assertThatThrownBy(() -> mockMvc.perform(get("/profile/id/aiden2")))
+                .hasCause(new IllegalArgumentException("잘못된 접근입니다."));
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("아이디로 프로필 페이지 보이는지 확인 - 본인 아이디")
+    @Test
+    void viewProfileAccountOwner() throws Exception {
+        mockMvc.perform(get("/profile/id/aiden"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile/aiden"))
+                .andExpect(authenticated().withUsername("aiden"));
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("닉네임으로 프로필 페이지 보이는지 확인 - 존재하지 않는 사용자")
+    @Test
+    void viewProfile_not_exist_user() {
+        assertThatThrownBy(() -> mockMvc.perform(get("/profile/aiden2")))
+                .hasCause(new IllegalArgumentException("aiden2에 해당하는 사용자가 존재하지 않습니다."));
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("닉네임으로 프로필 페이지 보이는지 확인 - 존재하는 사용자")
+    @Test
+    void viewProfile_exist_user() throws Exception {
+        mockMvc.perform(get("/profile/aiden"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("isOwner"))
+                .andExpect(view().name("account/profile"))
+                .andExpect(authenticated().withUsername("aiden"));
     }
 }

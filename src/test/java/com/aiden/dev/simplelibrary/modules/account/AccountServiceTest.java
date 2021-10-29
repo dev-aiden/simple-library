@@ -134,4 +134,37 @@ class AccountServiceTest {
         // Then
         assertThat(userDetails.getUsername()).isEqualTo("test");
     }
+
+    @DisplayName("닉네임으로 계정 조회 쿼리 테스트 - 닉네임 미존재")
+    @Test
+    void findByNickname_not_exist() {
+        // when
+        Account accountByNickname = accountService.findAccountByNickname("test");
+
+        // Then
+        then(accountRepository).should().findByNickname("test");
+        assertThat(accountByNickname).isNull();
+    }
+
+    @DisplayName("닉네임으로 계정 조회 쿼리 테스트 - 닉네임 존재")
+    @Test
+    void findByNickname() {
+        // Given
+        Account account = Account.builder()
+                .loginId("test")
+                .nickname("test")
+                .email("test@email.com")
+                .build();
+
+        given(accountRepository.findByNickname("test")).willReturn(Optional.of(account));
+
+        // when
+        Account accountByNickname = accountService.findAccountByNickname("test");
+
+        // Then
+        then(accountRepository).should().findByNickname("test");
+        assertThat(accountByNickname.getNickname()).isEqualTo("test");
+        assertThat(accountByNickname.getLoginId()).isEqualTo("test");
+        assertThat(accountByNickname.getEmail()).isEqualTo("test@email.com");
+    }
 }

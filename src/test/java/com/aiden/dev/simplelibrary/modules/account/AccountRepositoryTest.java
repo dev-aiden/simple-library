@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -58,5 +60,12 @@ class AccountRepositoryTest {
     void findByEmail() {
         assertThat(accountRepository.findByEmail("test@email.com")).isNotEmpty();
         assertThat(accountRepository.findByEmail("test2@email.com")).isEmpty();
+    }
+
+    @DisplayName("Nickname으로 계정 조회 쿼리 테스트")
+    @Test
+    void findByNickname() {
+        assertThat(accountRepository.findByNickname("test")).isNotEmpty();
+        assertThat(accountRepository.findByNickname("test2")).isEmpty();
     }
 }

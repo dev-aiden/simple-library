@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
@@ -20,7 +21,7 @@ public class AccountController {
     private final SignUpFormValidator signUpFormValidator;
     private final AccountService accountService;
 
-    @InitBinder
+    @InitBinder("signUpForm")
     public void initBinder(WebDataBinder webDataBinder) {
         webDataBinder.addValidators(signUpFormValidator);
     }
@@ -55,8 +56,7 @@ public class AccountController {
             return "account/checked-email";
         }
 
-        account.completeSignUp();
-        accountService.login(account);
+        accountService.completeSignUp(account);
         return "account/checked-email";
     }
 
@@ -76,5 +76,25 @@ public class AccountController {
 
         accountService.sendSignUpConfirmEmail(account);
         return "redirect:/";
+    }
+
+    @GetMapping("/profile/id/{loginId}")
+    public String viewProfileAccountOwner(@PathVariable String loginId, @CurrentAccount Account account) {
+        if(!loginId.equals(account.getLoginId())) {
+            throw new IllegalArgumentException("잘못된 접근입니다.");
+        }
+
+        return "redirect:/profile/" + account.getNickname();
+    }
+
+    @GetMapping("/profile/{nickname}")
+    public String viewProfile(@PathVariable String nickname, @CurrentAccount Account account, Model model) {
+        Account accountByNickname = accountService.findAccountByNickname(nickname);
+        if(accountByNickname == null) {
+            throw new IllegalArgumentException(nickname + "에 해당하는 사용자가 존재하지 않습니다.");
+        }
+        model.addAttribute(accountByNickname);
+        model.addAttribute("isOwner", accountByNickname.equals(account));
+        return "account/profile";
     }
 }
