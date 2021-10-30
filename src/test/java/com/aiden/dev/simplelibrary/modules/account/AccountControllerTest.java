@@ -127,7 +127,7 @@ class AccountControllerTest {
     void checkEmail_non_member() throws Exception {
         mockMvc.perform(get("/check-email"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("http://localhost/login"));
+                .andExpect(redirectedUrlPattern("**/login"));
     }
 
     @WithAccount(loginId = "aiden")

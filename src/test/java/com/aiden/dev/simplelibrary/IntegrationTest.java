@@ -3,7 +3,6 @@ package com.aiden.dev.simplelibrary;
 import com.aiden.dev.simplelibrary.modules.account.Account;
 import com.aiden.dev.simplelibrary.modules.account.AccountRepository;
 import com.aiden.dev.simplelibrary.modules.account.AccountService;
-import com.aiden.dev.simplelibrary.modules.account.WithAccount;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +17,6 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
@@ -262,6 +259,27 @@ public class IntegrationTest {
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("isOwner"))
                 .andExpect(view().name("account/profile"))
+                .andExpect(authenticated().withUsername("aiden"));
+    }
+
+    @DisplayName("프로필 수정 폼 테스트 - 비로그인 사용자")
+    @Test
+    void updateProfileForm_not_login_user() throws Exception {
+        mockMvc.perform(get("/settings/profile"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"))
+                .andExpect(unauthenticated());
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("프로필 수정 폼 테스트 - 로그인 사용자")
+    @Test
+    void updateProfileForm() throws Exception {
+        mockMvc.perform(get("/settings/profile"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("profileForm"))
+                .andExpect(view().name("settings/profile"))
                 .andExpect(authenticated().withUsername("aiden"));
     }
 }
