@@ -77,33 +77,33 @@ class AccountServiceTest {
     @DisplayName("회원가입 인증 메일 발송 테스트")
     @Test
     void sendSignUpConfirmEmail() {
-        // Given
+        // given
         Account account = Account.builder()
                 .loginId("test")
                 .password("test1234")
                 .build();
 
-        // When
+        // when
         accountService.sendSignUpConfirmEmail(account);
 
-        // Then
+        // then
         then(emailService).should().sendEmail(any());
     }
 
     @DisplayName("로그인 테스트")
     @Test
     void login() {
-        // Given
+        // given
         Account account = Account.builder()
                 .loginId("test")
                 .password("test1234")
                 .build();
 
-        // When
+        // when
         accountService.login(account);
         UserAccount authenticationAccount = (UserAccount) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        // Then
+        // then
         assertThat(authenticationAccount.getUsername()).isEqualTo("test");
         assertThat(authenticationAccount.getPassword()).isEqualTo("test1234");
     }
@@ -111,14 +111,14 @@ class AccountServiceTest {
     @DisplayName("유저 정보 조회 테스트 - 사용자 아이디 미존재")
     @Test
     void loadUserByUsername_not_exist_login_id() {
-        // When, Then
+        // when, then
         assertThrows(UsernameNotFoundException.class, () -> accountService.loadUserByUsername("test"));
     }
 
     @DisplayName("유저 정보 조회 테스트 - 사용자 아이디 존재")
     @Test
     void loadUserByUsername_exist_login_id() {
-        // Given
+        // given
         Account account = Account.builder()
                 .loginId("test")
                 .password("test1234")
@@ -128,10 +128,10 @@ class AccountServiceTest {
 
         given(accountRepository.findByLoginId(any())).willReturn(Optional.of(account));
 
-        // When
+        // when
         UserDetails userDetails = accountService.loadUserByUsername("test");
 
-        // Then
+        // then
         assertThat(userDetails.getUsername()).isEqualTo("test");
     }
 
@@ -149,7 +149,7 @@ class AccountServiceTest {
     @DisplayName("닉네임으로 계정 조회 쿼리 테스트 - 닉네임 존재")
     @Test
     void findByNickname() {
-        // Given
+        // given
         Account account = Account.builder()
                 .loginId("test")
                 .nickname("test")
@@ -161,10 +161,30 @@ class AccountServiceTest {
         // when
         Account accountByNickname = accountService.findAccountByNickname("test");
 
-        // Then
+        // then
         then(accountRepository).should().findByNickname("test");
         assertThat(accountByNickname.getNickname()).isEqualTo("test");
         assertThat(accountByNickname.getLoginId()).isEqualTo("test");
         assertThat(accountByNickname.getEmail()).isEqualTo("test@email.com");
+    }
+
+    @DisplayName("프로필 수정 테스트")
+    void updateProfile() {
+        // given
+        Account account = Account.builder()
+                .loginId("test")
+                .nickname("test")
+                .email("test@email.com")
+                .build();
+
+        ProfileForm profileForm = new ProfileForm();
+        profileForm.setNickname("test2");
+
+        // when
+        accountService.updateProfile(account, profileForm);
+
+        // then
+        then(accountRepository).should().save(account);
+        assertThat(account.getNickname()).isEqualTo("test2");
     }
 }

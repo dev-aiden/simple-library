@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,7 +23,6 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -163,7 +163,6 @@ public class IntegrationTest {
     @Test
     void resendConfirmEmail_before_1_hour() throws Exception {
         mockMvc.perform(get("/resend-confirm-email"))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(view().name("account/check-email"))
                 .andExpect(model().attributeExists("error"))
@@ -179,7 +178,6 @@ public class IntegrationTest {
         account.setEmailCheckTokenGeneratedAt(LocalDateTime.now().minusHours(2L));
 
         mockMvc.perform(get("/resend-confirm-email"))
-                .andDo(print())
                 .andExpect(status().is3xxRedirection())
                 .andExpect(model().attributeDoesNotExist("error"))
                 .andExpect(model().attributeDoesNotExist("email"))
@@ -194,7 +192,6 @@ public class IntegrationTest {
                         .param("username", "aiden2")
                         .param("password", "11111111")
                         .with(csrf()))
-                .andDo(print())
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?error"))
                 .andExpect(unauthenticated());
@@ -207,7 +204,6 @@ public class IntegrationTest {
                         .param("username", "aiden")
                         .param("password", "12345678")
                         .with(csrf()))
-                .andDo(print())
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"))
                 .andExpect(authenticated().withUsername("aiden"));
@@ -218,7 +214,6 @@ public class IntegrationTest {
     void logout() throws Exception {
         mockMvc.perform(post("/logout")
                         .with(csrf()))
-                .andDo(print())
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"))
                 .andExpect(unauthenticated());
@@ -281,5 +276,42 @@ public class IntegrationTest {
                 .andExpect(model().attributeExists("profileForm"))
                 .andExpect(view().name("settings/profile"))
                 .andExpect(authenticated().withUsername("aiden"));
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("프로필 수정 테스트 - 입력값 에러")
+    @Test
+    void updateProfile_wrong_value() throws Exception {
+        mockMvc.perform(post("/settings/profile")
+                        .param("nickname", "")
+                        .param("profileImage", "aidenProfileImage")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().hasErrors())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(view().name("settings/profile"))
+                .andExpect(authenticated().withUsername("aiden"));
+
+        Optional<Account> accountOptional = accountRepository.findByLoginId("aiden");
+        assertThat(accountOptional).isNotNull();
+        assertThat(accountOptional.get().getNickname()).isEqualTo("aiden");
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("프로필 수정 테스트 - 입력값 정상")
+    @Test
+    void updateProfile() throws Exception {
+        mockMvc.perform(post("/settings/profile")
+                        .param("nickname", "aiden2")
+                        .param("profileImage", "aidenProfileImage")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(redirectedUrl("/settings/profile"))
+                .andExpect(authenticated().withUsername("aiden"));
+
+        Optional<Account> accountOptional = accountRepository.findByLoginId("aiden");
+        assertThat(accountOptional).isNotNull();
+        assertThat(accountOptional.get().getNickname()).isEqualTo("aiden2");
     }
 }

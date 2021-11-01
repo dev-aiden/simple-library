@@ -77,4 +77,9 @@ public class AccountService implements UserDetailsService {
     public Account findAccountByNickname(String nickname) {
         return accountRepository.findByNickname(nickname).orElse(null);
     }
+
+    public void updateProfile(Account account, ProfileForm profileForm) {
+        modelMapper.map(profileForm, account);
+        accountRepository.save(account);
+    }
 }

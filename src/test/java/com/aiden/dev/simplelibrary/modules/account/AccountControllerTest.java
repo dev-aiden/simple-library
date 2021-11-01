@@ -19,7 +19,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureTestDatabase
@@ -146,7 +145,6 @@ class AccountControllerTest {
     @Test
     void resendConfirmEmail_before_1_hour() throws Exception {
         mockMvc.perform(get("/resend-confirm-email"))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("error"))
                 .andExpect(model().attributeExists("email"))
@@ -158,7 +156,6 @@ class AccountControllerTest {
     @Test
     void resendConfirmEmail_after_1_hour() throws Exception {
         mockMvc.perform(get("/resend-confirm-email"))
-                .andDo(print())
                 .andExpect(status().is3xxRedirection())
                 .andExpect(model().attributeDoesNotExist("error"))
                 .andExpect(model().attributeDoesNotExist("email"))
