@@ -12,6 +12,7 @@ public class SignUpForm {
 
     @NotBlank
     @Length(min = 3, max = 10)
+    @Pattern(regexp = "^[a-z0-9]{3,10}$", message = "영어 소문자, 숫자만 입력가능합니다!")
     private String loginId;
 
     @NotBlank
