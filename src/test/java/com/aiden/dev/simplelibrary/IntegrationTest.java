@@ -257,7 +257,7 @@ public class IntegrationTest {
                 .andExpect(authenticated().withUsername("aiden"));
     }
 
-    @DisplayName("프로필 수정 폼 테스트 - 비로그인 사용자")
+    @DisplayName("프로필 변경 폼 테스트 - 비로그인 사용자")
     @Test
     void updateProfileForm_not_login_user() throws Exception {
         mockMvc.perform(get("/settings/profile"))
@@ -267,7 +267,7 @@ public class IntegrationTest {
     }
 
     @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
-    @DisplayName("프로필 수정 폼 테스트 - 로그인 사용자")
+    @DisplayName("프로필 변경 폼 테스트 - 로그인 사용자")
     @Test
     void updateProfileForm() throws Exception {
         mockMvc.perform(get("/settings/profile"))
@@ -279,7 +279,7 @@ public class IntegrationTest {
     }
 
     @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
-    @DisplayName("프로필 수정 테스트 - 입력값 에러")
+    @DisplayName("프로필 변경 테스트 - 입력값 에러")
     @Test
     void updateProfile_wrong_value() throws Exception {
         mockMvc.perform(post("/settings/profile")
@@ -298,7 +298,7 @@ public class IntegrationTest {
     }
 
     @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
-    @DisplayName("프로필 수정 테스트 - 입력값 정상")
+    @DisplayName("프로필 변경 테스트 - 입력값 정상")
     @Test
     void updateProfile() throws Exception {
         mockMvc.perform(post("/settings/profile")
@@ -313,5 +313,69 @@ public class IntegrationTest {
         Optional<Account> accountOptional = accountRepository.findByLoginId("aiden");
         assertThat(accountOptional).isNotNull();
         assertThat(accountOptional.get().getNickname()).isEqualTo("aiden2");
+    }
+
+    @DisplayName("비밀번호 변경 폼 테스트 - 비로그인 사용자")
+    @Test
+    void updatePasswordForm_not_login_user() throws Exception {
+        mockMvc.perform(get("/settings/password"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"))
+                .andExpect(unauthenticated());
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("비밀번호 변경 폼 테스트 - 로그인 사용자")
+    @Test
+    void updatePasswordForm() throws Exception {
+        mockMvc.perform(get("/settings/password"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("passwordForm"))
+                .andExpect(view().name("settings/password"))
+                .andExpect(authenticated().withUsername("aiden"));
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("비밀번호 변경 테스트 - 입력값 에러")
+    @Test
+    void updatePassword_wrong_value() throws Exception {
+        Account account = accountRepository.findByLoginId("aiden").orElse(null);
+        String originPassword = account.getPassword();
+
+        mockMvc.perform(post("/settings/password")
+                        .param("newPassword", "test1234")
+                        .param("newPasswordConfirm", "test5678")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().hasErrors())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(view().name("settings/password"))
+                .andExpect(authenticated().withUsername("aiden"));
+
+        Optional<Account> accountOptional = accountRepository.findByLoginId("aiden");
+        assertThat(accountOptional).isNotNull();
+        assertThat(accountOptional.get().getPassword()).isEqualTo(originPassword);
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("비밀번호 변경 테스트 - 입력값 정상")
+    @Test
+    void updatePassword() throws Exception {
+        Account account = accountRepository.findByLoginId("aiden").orElse(null);
+        String originPassword = account.getPassword();
+
+        mockMvc.perform(post("/settings/password")
+                        .param("newPassword", "test5678")
+                        .param("newPasswordConfirm", "test5678")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(redirectedUrl("/settings/password"))
+                .andExpect(authenticated().withUsername("aiden"));
+
+        Optional<Account> accountOptional = accountRepository.findByLoginId("aiden");
+        assertThat(accountOptional).isNotNull();
+        assertThat(accountOptional.get().getNickname()).isNotEqualTo(originPassword);
     }
 }

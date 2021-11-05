@@ -1,6 +1,7 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
 import com.aiden.dev.simplelibrary.infra.mail.EmailService;
+import com.aiden.dev.simplelibrary.modules.account.form.PasswordForm;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,9 +30,8 @@ class AccountServiceTest {
     @InjectMocks AccountService accountService;
     @Mock EmailService emailService;
     @Mock AccountRepository accountRepository;
-    @Mock ModelMapper modelMapper;
     @Spy PasswordEncoder passwordEncoder;
-
+    @Spy ModelMapper modelMapper;
 
     @DisplayName("계정 생성 테스트")
     @Test
@@ -51,7 +51,6 @@ class AccountServiceTest {
 
         given(passwordEncoder.encode(any())).willReturn("encryptPassword");
         given(accountRepository.save(any())).willReturn(account);
-        given(modelMapper.map(any(), any())).willReturn(account);
 
         // when
         Account savedAccount = accountService.createAccount(signUpForm);
@@ -169,6 +168,7 @@ class AccountServiceTest {
     }
 
     @DisplayName("프로필 수정 테스트")
+    @Test
     void updateProfile() {
         // given
         Account account = Account.builder()
@@ -186,5 +186,27 @@ class AccountServiceTest {
         // then
         then(accountRepository).should().save(account);
         assertThat(account.getNickname()).isEqualTo("test2");
+    }
+
+    @DisplayName("비밀번호 수정 테스트")
+    @Test
+    void updatePassword() {
+        // given
+        Account account = Account.builder()
+                .loginId("test")
+                .nickname("test")
+                .password("test1234")
+                .email("test@email.com")
+                .build();
+
+        PasswordForm passwordForm = new PasswordForm();
+        passwordForm.setNewPassword("test5678");
+
+        // when
+        accountService.updatePassword(account, passwordForm.getNewPassword());
+
+        // then
+        then(accountRepository).should().save(account);
+        assertThat(account.getPassword()).isNotEqualTo("test1234");
     }
 }

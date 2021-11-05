@@ -35,7 +35,12 @@ public class AccountService implements UserDetailsService {
     }
 
     private Account saveAccount(SignUpForm signUpForm) {
-        Account account = modelMapper.map(signUpForm, Account.class);
+        Account account = Account.builder()
+                .loginId(signUpForm.getLoginId())
+                .nickname(signUpForm.getNickname())
+                .email(signUpForm.getEmail())
+                .password(signUpForm.getPassword())
+                .build();
         account.generateEmailCheckToken();
         return accountRepository.save(account);
     }
@@ -80,6 +85,11 @@ public class AccountService implements UserDetailsService {
 
     public void updateProfile(Account account, ProfileForm profileForm) {
         modelMapper.map(profileForm, account);
+        accountRepository.save(account);
+    }
+
+    public void updatePassword(Account account, String newPassword) {
+        account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
     }
 }
