@@ -20,6 +20,12 @@ public class WithAccountSecurityContextFactory implements WithSecurityContextFac
                 .email(withAccount.loginId() + "@email.com")
                 .emailCheckTokenGeneratedAt(LocalDateTime.now().minusHours(withAccount.minusHoursForEmailCheckToken()))
                 .emailVerified(withAccount.isEmailVerified())
+                .bookRentalNotificationByEmail(false)
+                .bookRentalNotificationByWeb(true)
+                .bookReturnNotificationByEmail(false)
+                .bookReturnNotificationByWeb(true)
+                .bookRentalAvailabilityNotificationByEmail(false)
+                .bookRentalAvailabilityNotificationByWeb(true)
                 .build();
 
         UsernamePasswordAuthenticationToken token= new UsernamePasswordAuthenticationToken(new UserAccount(account), account.getPassword(), List.of(new SimpleGrantedAuthority(withAccount.role())));

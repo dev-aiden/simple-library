@@ -1,8 +1,12 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
+import com.aiden.dev.simplelibrary.infra.config.AppConfig;
 import com.aiden.dev.simplelibrary.infra.mail.EmailService;
+import com.aiden.dev.simplelibrary.modules.account.form.NotificationForm;
 import com.aiden.dev.simplelibrary.modules.account.form.PasswordForm;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
+import org.aspectj.lang.annotation.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.NameTokenizers;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -32,6 +38,13 @@ class AccountServiceTest {
     @Mock AccountRepository accountRepository;
     @Spy PasswordEncoder passwordEncoder;
     @Spy ModelMapper modelMapper;
+
+    @BeforeEach
+    void beforeEach() {
+        modelMapper.getConfiguration()
+                .setDestinationNameTokenizer(NameTokenizers.UNDERSCORE)
+                .setSourceNameTokenizer(NameTokenizers.UNDERSCORE);
+    }
 
     @DisplayName("계정 생성 테스트")
     @Test
@@ -208,5 +221,43 @@ class AccountServiceTest {
         // then
         then(accountRepository).should().save(account);
         assertThat(account.getPassword()).isNotEqualTo("test1234");
+    }
+
+    @DisplayName("알림 수정 테스트")
+    @Test
+    void updateNotification() {
+        // given
+        Account account = Account.builder()
+                .loginId("test")
+                .nickname("test")
+                .password("test1234")
+                .email("test@email.com")
+                .bookRentalNotificationByEmail(true)
+                .bookRentalNotificationByWeb(true)
+                .bookReturnNotificationByEmail(true)
+                .bookReturnNotificationByWeb(true)
+                .bookRentalAvailabilityNotificationByEmail(true)
+                .bookRentalAvailabilityNotificationByWeb(true)
+                .build();
+
+        NotificationForm notificationForm = new NotificationForm();
+        notificationForm.setBookRentalNotificationByEmail(false);
+        notificationForm.setBookRentalNotificationByWeb(false);
+        notificationForm.setBookReturnNotificationByEmail(false);
+        notificationForm.setBookReturnNotificationByWeb(false);
+        notificationForm.setBookRentalAvailabilityNotificationByEmail(false);
+        notificationForm.setBookRentalAvailabilityNotificationByWeb(false);
+
+        // when
+        accountService.updateNotification(account, notificationForm);
+
+        // then
+        then(accountRepository).should().save(account);
+        assertThat(account.getBookRentalNotificationByEmail()).isFalse();
+        assertThat(account.getBookRentalNotificationByWeb()).isFalse();
+        assertThat(account.getBookReturnNotificationByEmail()).isFalse();
+        assertThat(account.getBookReturnNotificationByWeb()).isFalse();
+        assertThat(account.getBookRentalAvailabilityNotificationByEmail()).isFalse();
+        assertThat(account.getBookRentalAvailabilityNotificationByWeb()).isFalse();
     }
 }

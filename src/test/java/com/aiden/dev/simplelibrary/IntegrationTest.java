@@ -378,4 +378,52 @@ public class IntegrationTest {
         assertThat(accountOptional).isNotNull();
         assertThat(accountOptional.get().getNickname()).isNotEqualTo(originPassword);
     }
+
+    @DisplayName("알림 변경 폼 테스트 - 비로그인 사용자")
+    @Test
+    void updateNotificationForm_not_login_user() throws Exception {
+        mockMvc.perform(get("/settings/notification"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"))
+                .andExpect(unauthenticated());
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("알림 변경 폼 테스트 - 로그인 사용자")
+    @Test
+    void updateNotificationForm() throws Exception {
+        mockMvc.perform(get("/settings/notification"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("notificationForm"))
+                .andExpect(view().name("settings/notification"))
+                .andExpect(authenticated().withUsername("aiden"));
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("알림 변경 테스트")
+    @Test
+    void updateNotification() throws Exception {
+        mockMvc.perform(post("/settings/notification")
+                        .param("bookRentalNotificationByEmail", "true")
+                        .param("bookRentalNotificationByWeb", "false")
+                        .param("bookReturnNotificationByEmail", "true")
+                        .param("bookReturnNotificationByWeb", "false")
+                        .param("bookRentalAvailabilityNotificationByEmail", "true")
+                        .param("bookRentalAvailabilityNotificationByWeb", "false")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(redirectedUrl("/settings/notification"))
+                .andExpect(authenticated().withUsername("aiden"));
+
+        Account account = accountRepository.findByLoginId("aiden").orElse(null);
+        assertThat(account).isNotNull();
+        assertThat(account.getBookRentalNotificationByEmail()).isTrue();
+        assertThat(account.getBookRentalNotificationByWeb()).isFalse();
+        assertThat(account.getBookReturnNotificationByEmail()).isTrue();
+        assertThat(account.getBookReturnNotificationByWeb()).isFalse();
+        assertThat(account.getBookRentalAvailabilityNotificationByEmail()).isTrue();
+        assertThat(account.getBookRentalAvailabilityNotificationByWeb()).isTrue();
+    }
 }

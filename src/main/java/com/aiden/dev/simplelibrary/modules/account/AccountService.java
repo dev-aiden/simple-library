@@ -2,6 +2,7 @@ package com.aiden.dev.simplelibrary.modules.account;
 
 import com.aiden.dev.simplelibrary.infra.mail.EmailMessage;
 import com.aiden.dev.simplelibrary.infra.mail.EmailService;
+import com.aiden.dev.simplelibrary.modules.account.form.NotificationForm;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -41,6 +42,7 @@ public class AccountService implements UserDetailsService {
                 .email(signUpForm.getEmail())
                 .password(signUpForm.getPassword())
                 .build();
+        account.initNotificationSettings();
         account.generateEmailCheckToken();
         return accountRepository.save(account);
     }
@@ -90,6 +92,11 @@ public class AccountService implements UserDetailsService {
 
     public void updatePassword(Account account, String newPassword) {
         account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+    }
+
+    public void updateNotification(Account account, NotificationForm notificationForm) {
+        modelMapper.map(notificationForm, account);
         accountRepository.save(account);
     }
 }

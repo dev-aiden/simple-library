@@ -38,9 +38,26 @@ public class Account {
     @Lob
     private String profileImage;
 
-    private Boolean notificationEmail = true;
+    private Boolean bookRentalNotificationByEmail;
 
-    private Boolean notificationWeb = true;
+    private Boolean bookRentalNotificationByWeb;
+
+    private Boolean bookReturnNotificationByEmail;
+
+    private Boolean bookReturnNotificationByWeb;
+
+    private Boolean bookRentalAvailabilityNotificationByEmail;
+
+    private Boolean bookRentalAvailabilityNotificationByWeb;
+
+    public void initNotificationSettings() {
+        bookRentalNotificationByEmail = false;
+        bookRentalNotificationByWeb = true;
+        bookReturnNotificationByEmail = false;
+        bookReturnNotificationByWeb = true;
+        bookRentalAvailabilityNotificationByEmail = false;
+        bookRentalAvailabilityNotificationByWeb = true;
+    }
 
     public void generateEmailCheckToken() {
         this.emailVerified = false;

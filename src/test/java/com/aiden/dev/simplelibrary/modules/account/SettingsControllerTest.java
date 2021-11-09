@@ -1,5 +1,6 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
+import com.aiden.dev.simplelibrary.modules.account.form.NotificationForm;
 import com.aiden.dev.simplelibrary.modules.account.validator.PasswordFormValidator;
 import com.aiden.dev.simplelibrary.modules.account.validator.ProfileFormValidator;
 import org.junit.jupiter.api.DisplayName;
@@ -151,5 +152,52 @@ class SettingsControllerTest {
                 .andExpect(model().hasErrors())
                 .andExpect(model().attributeExists("account"))
                 .andExpect(view().name("settings/password"));
+    }
+
+    @DisplayName("알림 변경 페이지 보이는지 테스트 - 로그인 이전")
+    @Test
+    void updateNotificationForm_before_login() throws Exception {
+        mockMvc.perform(get("/settings/notification"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @WithAccount(loginId = "aiden")
+    @DisplayName("알림 변경 페이지 보이는지 테스트 - 로그인 이후")
+    @Test
+    void updateNotificationForm_after_login() throws Exception {
+        when(modelMapper.map(any(), any())).thenReturn(new NotificationForm());
+        
+        mockMvc.perform(get("/settings/notification"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("notificationForm"))
+                .andExpect(view().name("settings/notification"));
+    }
+
+    @DisplayName("알림 변경 테스트 - 로그인 이전")
+    @Test
+    void updateNotification_before_login() throws Exception {
+        mockMvc.perform(post("/settings/notification")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @WithAccount(loginId = "aiden")
+    @DisplayName("알림 변경 테스트 - 로그인 이후")
+    @Test
+    void updateNotification_after_login() throws Exception {
+        mockMvc.perform(post("/settings/notification")
+                        .param("bookRentalNotificationByEmail", "true")
+                        .param("bookRentalNotificationByWeb", "true")
+                        .param("bookReturnNotificationByEmail", "true")
+                        .param("bookReturnNotificationByWeb", "true")
+                        .param("bookRentalAvailabilityNotificationByEmail", "true")
+                        .param("bookRentalAvailabilityNotificationByWeb", "true")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(redirectedUrl("/settings/notification"));
     }
 }

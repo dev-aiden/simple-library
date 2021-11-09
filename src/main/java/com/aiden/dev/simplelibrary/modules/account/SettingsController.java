@@ -1,9 +1,10 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
+import com.aiden.dev.simplelibrary.modules.account.form.NotificationForm;
 import com.aiden.dev.simplelibrary.modules.account.form.PasswordForm;
 import com.aiden.dev.simplelibrary.modules.account.validator.CurrentAccount;
-import com.aiden.dev.simplelibrary.modules.account.validator.ProfileFormValidator;
 import com.aiden.dev.simplelibrary.modules.account.validator.PasswordFormValidator;
+import com.aiden.dev.simplelibrary.modules.account.validator.ProfileFormValidator;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
@@ -74,5 +75,25 @@ public class SettingsController {
         accountService.updatePassword(account, passwordForm.getNewPassword());
         redirectAttributes.addFlashAttribute("message", "비밀번호가 변경되었습니다.");
         return "redirect:/settings/password";
+    }
+
+    @GetMapping("/notification")
+    public String updateNotificationForm(@CurrentAccount Account account, Model model) {
+        model.addAttribute(account);
+        model.addAttribute(modelMapper.map(account, NotificationForm.class));
+        return "settings/notification";
+    }
+
+    @PostMapping("/notification")
+    public String updateNotification(@CurrentAccount Account account, @Validated NotificationForm notificationForm, Errors errors,
+                                     Model model, RedirectAttributes attributes) {
+        if(errors.hasErrors()) {
+            model.addAttribute(account);
+            return "settings/notification";
+        }
+        notificationForm.setBookRentalAvailabilityNotificationByWeb(true);
+        accountService.updateNotification(account, notificationForm);
+        attributes.addFlashAttribute("message", "알림 설정을 변경했습니다.");
+        return "redirect:/settings/notification";
     }
 }
