@@ -21,8 +21,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -425,5 +425,19 @@ public class IntegrationTest {
         assertThat(account.getBookReturnNotificationByWeb()).isFalse();
         assertThat(account.getBookRentalAvailabilityNotificationByEmail()).isTrue();
         assertThat(account.getBookRentalAvailabilityNotificationByWeb()).isTrue();
+    }
+
+    @WithUserDetails(value = "aiden", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("계정 삭제 테스트")
+    @Test
+    void deleteAccount() throws Exception {
+        mockMvc.perform(delete("/settings/account")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(redirectedUrl("/"))
+                .andExpect(unauthenticated());
+
+        assertThat(accountRepository.findByNickname("aiden")).isEmpty();
     }
 }

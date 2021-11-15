@@ -1,11 +1,9 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
-import com.aiden.dev.simplelibrary.infra.config.AppConfig;
 import com.aiden.dev.simplelibrary.infra.mail.EmailService;
 import com.aiden.dev.simplelibrary.modules.account.form.NotificationForm;
 import com.aiden.dev.simplelibrary.modules.account.form.PasswordForm;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
-import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,7 +14,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.NameTokenizers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -259,5 +256,24 @@ class AccountServiceTest {
         assertThat(account.getBookReturnNotificationByWeb()).isFalse();
         assertThat(account.getBookRentalAvailabilityNotificationByEmail()).isFalse();
         assertThat(account.getBookRentalAvailabilityNotificationByWeb()).isFalse();
+    }
+
+    @DisplayName("계정 삭제 테스트")
+    @Test
+    void deleteAccount() {
+        // Given
+        Account account = Account.builder()
+                .loginId("test")
+                .password("test1234")
+                .nickname("test")
+                .email("test@email.com")
+                .build();
+//        given(accountRepository.save(any())).willReturn(account);
+
+        // When
+        accountService.deleteAccount(account);
+
+        // Then
+        then(accountRepository).should().delete(account);
     }
 }

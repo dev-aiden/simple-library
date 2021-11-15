@@ -15,10 +15,11 @@ import javax.sql.DataSource;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SettingsController.class)
@@ -199,5 +200,46 @@ class SettingsControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(flash().attributeExists("message"))
                 .andExpect(redirectedUrl("/settings/notification"));
+    }
+
+    @DisplayName("계정 삭제 페이지 보이는지 테스트 - 로그인 이전")
+    @Test
+    void deleteAccountForm_before_login() throws Exception {
+        mockMvc.perform(get("/settings/account"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @WithAccount(loginId = "aiden")
+    @DisplayName("계정 삭제 페이지 보이는지 테스트 - 로그인 이후")
+    @Test
+    void deleteAccountForm_after_login() throws Exception {
+        mockMvc.perform(get("/settings/account"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(view().name("settings/account"));
+    }
+
+    @DisplayName("계정 삭제 테스트 - 로그인 이전")
+    @Test
+    void deleteAccount_before_login() throws Exception {
+        mockMvc.perform(delete("/settings/account")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @WithAccount(loginId = "aiden")
+    @DisplayName("계정 삭제 테스트 - 로그인 이후")
+    @Test
+    void deleteAccount_after_login() throws Exception {
+        mockMvc.perform(delete("/settings/account")
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(redirectedUrl("/"));
+
+        verify(accountService, times(1)).deleteAccount(any());
     }
 }
