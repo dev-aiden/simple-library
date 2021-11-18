@@ -65,7 +65,7 @@ public class Account {
         this.emailCheckTokenGeneratedAt = LocalDateTime.now();
     }
 
-    public boolean isValidToken(String token) {
+    public boolean isValidEmailCheckToken(String token) {
         return this.emailCheckToken.equals(token);
     }
 

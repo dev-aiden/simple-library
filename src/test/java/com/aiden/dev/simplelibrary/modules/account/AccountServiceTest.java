@@ -1,6 +1,7 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
 import com.aiden.dev.simplelibrary.infra.mail.EmailService;
+import com.aiden.dev.simplelibrary.modules.account.form.FindPasswordForm;
 import com.aiden.dev.simplelibrary.modules.account.form.NotificationForm;
 import com.aiden.dev.simplelibrary.modules.account.form.PasswordForm;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
@@ -268,12 +269,35 @@ class AccountServiceTest {
                 .nickname("test")
                 .email("test@email.com")
                 .build();
-//        given(accountRepository.save(any())).willReturn(account);
 
         // When
         accountService.deleteAccount(account);
 
         // Then
         then(accountRepository).should().delete(account);
+    }
+
+    @DisplayName("비밀번호 찾기 메일 발송 테스트")
+    @Test
+    void sendFindPasswordEmail() {
+        Account account = Account.builder()
+                .loginId("test")
+                .password("test1234")
+                .nickname("test")
+                .email("test@email.com")
+                .build();
+        String originPassword = account.getPassword();
+        given(accountRepository.findByLoginId(any())).willReturn(Optional.of(account));
+
+        FindPasswordForm findPasswordForm = new FindPasswordForm();
+        findPasswordForm.setLoginId("test");
+        findPasswordForm.setEmail("test@email.com");
+
+        // When
+        accountService.sendFindPasswordEmail(findPasswordForm);
+
+        // Then
+        assertThat(account.getPassword()).isNotEqualTo(originPassword);
+        then(emailService).should().sendEmail(any());;
     }
 }

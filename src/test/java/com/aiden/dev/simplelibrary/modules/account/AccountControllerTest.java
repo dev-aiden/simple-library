@@ -1,5 +1,6 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
+import com.aiden.dev.simplelibrary.modules.account.validator.FindPasswordFormValidator;
 import com.aiden.dev.simplelibrary.modules.account.validator.SignUpFormValidator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ class AccountControllerTest {
 
     @Autowired MockMvc mockMvc;
     @MockBean SignUpFormValidator signUpFormValidator;
+    @MockBean FindPasswordFormValidator findPasswordFormValidator;
     @MockBean AccountService accountService;
     @MockBean AccountRepository accountRepository;
     
@@ -94,7 +96,7 @@ class AccountControllerTest {
     @Test
     void checkEmailToken_wrong_token() throws Exception {
         given(accountService.findAccountByEmail(any())).willReturn(mock(Account.class));
-        given(accountService.findAccountByEmail(any()).isValidToken(any())).willReturn(false);
+        given(accountService.findAccountByEmail(any()).isValidEmailCheckToken(any())).willReturn(false);
 
         mockMvc.perform(get("/check-email-token")
                         .param("token", "testToken")
@@ -109,7 +111,7 @@ class AccountControllerTest {
     @Test
     void checkEmailToken() throws Exception {
         given(accountService.findAccountByEmail(any())).willReturn(mock(Account.class));
-        given(accountService.findAccountByEmail(any()).isValidToken(any())).willReturn(true);
+        given(accountService.findAccountByEmail(any()).isValidEmailCheckToken(any())).willReturn(true);
 
         mockMvc.perform(get("/check-email-token")
                         .param("token", "testToken")
@@ -203,5 +205,46 @@ class AccountControllerTest {
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("isOwner"))
                 .andExpect(view().name("account/profile"));
+    }
+
+    @DisplayName("비밀번호 찾기 페이지 보이는지 테스트")
+    @Test
+    void findPasswordForm() throws Exception {
+        when(findPasswordFormValidator.supports(any())).thenReturn(true);
+
+        mockMvc.perform(get("/find-password"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("findPasswordForm"))
+                .andExpect(view().name("account/find-password"));
+    }
+
+    @DisplayName("비밀번호 찾기 - 입력값 오류")
+    @Test
+    void findPassword_wrong_value() throws Exception {
+        when(findPasswordFormValidator.supports(any())).thenReturn(true);
+
+        mockMvc.perform(post("/find-password")
+                        .param("loginId", "test")
+                        .param("email", "test")
+                        .with(csrf()))
+                .andExpect(view().name("account/find-password"))
+                .andExpect(status().isOk());
+    }
+
+    @DisplayName("비밀번호 찾기 - 입력값 정상")
+    @Test
+    void findPassword() throws Exception {
+        when(findPasswordFormValidator.supports(any())).thenReturn(true);
+
+        mockMvc.perform(post("/find-password")
+                        .param("loginId", "test")
+                        .param("email", "test@email.com")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("alertType"))
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(redirectedUrl("/"));
+
+        then(accountService).should().sendFindPasswordEmail(any());
     }
 }

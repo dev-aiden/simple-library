@@ -1,7 +1,9 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
+import com.aiden.dev.simplelibrary.modules.account.form.FindPasswordForm;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
 import com.aiden.dev.simplelibrary.modules.account.validator.CurrentAccount;
+import com.aiden.dev.simplelibrary.modules.account.validator.FindPasswordFormValidator;
 import com.aiden.dev.simplelibrary.modules.account.validator.SignUpFormValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -13,17 +15,26 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import javax.validation.Valid;
 
 @Controller
 @RequiredArgsConstructor
 public class AccountController {
 
     private final SignUpFormValidator signUpFormValidator;
+    private final FindPasswordFormValidator findPasswordFormValidator;
     private final AccountService accountService;
 
     @InitBinder("signUpForm")
-    public void initBinder(WebDataBinder webDataBinder) {
+    public void signUpFormInitBinder(WebDataBinder webDataBinder) {
         webDataBinder.addValidators(signUpFormValidator);
+    }
+
+    @InitBinder("findPasswordForm")
+    public void findPasswordFormInitBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(findPasswordFormValidator);
     }
 
     @GetMapping("/sign-up")
@@ -51,7 +62,7 @@ public class AccountController {
             return "account/checked-email";
         }
 
-        if(!account.isValidToken(token)) {
+        if(!account.isValidEmailCheckToken(token)) {
             model.addAttribute("error", "wrong.token");
             return "account/checked-email";
         }
@@ -96,5 +107,22 @@ public class AccountController {
         model.addAttribute(accountByNickname);
         model.addAttribute("isOwner", accountByNickname.equals(account));
         return "account/profile";
+    }
+
+    @GetMapping("/find-password")
+    public String findPasswordForm(Model model) {
+        model.addAttribute(new FindPasswordForm());
+        return "account/find-password";
+    }
+
+    @PostMapping("/find-password")
+    public String findPassword(@Valid FindPasswordForm findPasswordForm, Errors errors, RedirectAttributes attributes) {
+        if(errors.hasErrors()) {
+            return "account/find-password";
+        }
+        accountService.sendFindPasswordEmail(findPasswordForm);
+        attributes.addFlashAttribute("alertType", "alert-warning");
+        attributes.addFlashAttribute("message", "메일로 임시 비밀번호가 발송되었습니다. 메일을 확인해 주세요.");
+        return "redirect:/";
     }
 }

@@ -22,7 +22,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -439,5 +438,57 @@ public class IntegrationTest {
                 .andExpect(unauthenticated());
 
         assertThat(accountRepository.findByNickname("aiden")).isEmpty();
+    }
+
+    @DisplayName("비밀번호 찾기 폼 테스트")
+    @Test
+    void findPasswordForm() throws Exception {
+        mockMvc.perform(get("/find-password"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("findPasswordForm"))
+                .andExpect(view().name("account/find-password"))
+                .andExpect(unauthenticated());
+    }
+
+    @DisplayName("비밀번호 찾기 - 입력값 오류")
+    @Test
+    void findPassword_wrong_value() throws Exception {
+        mockMvc.perform(post("/find-password")
+                        .param("loginId", "aiden")
+                        .param("email", "aiden")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("account/find-password"))
+                .andExpect(unauthenticated());
+    }
+
+    @DisplayName("비밀번호 찾기 - 존재하지 않는 사용자")
+    @Test
+    void findPassword_not_exist_user() throws Exception {
+        mockMvc.perform(post("/find-password")
+                        .param("loginId", "aiden")
+                        .param("email", "aiden2@email.com")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("account/find-password"))
+                .andExpect(unauthenticated());
+    }
+
+    @DisplayName("비밀번호 찾기 - 입력값 정상")
+    @Test
+    void findPassword() throws Exception {
+        String originPassword = accountRepository.findByLoginId("aiden").get().getPassword();
+
+        mockMvc.perform(post("/find-password")
+                        .param("loginId", "aiden")
+                        .param("email", "aiden@email.com")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("alertType"))
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(redirectedUrl("/"))
+                .andExpect(unauthenticated());
+
+        assertThat(accountRepository.findByLoginId("aiden").get().getPassword()).isNotEqualTo(originPassword);
     }
 }

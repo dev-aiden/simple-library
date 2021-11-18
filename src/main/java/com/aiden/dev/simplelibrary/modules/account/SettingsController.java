@@ -105,6 +105,7 @@ public class SettingsController {
     public String deleteAccount(@CurrentAccount Account account, RedirectAttributes redirectAttributes) {
         accountService.deleteAccount(account);
         SecurityContextHolder.clearContext();
+        redirectAttributes.addFlashAttribute("alertType", "alert-danger");
         redirectAttributes.addFlashAttribute("message", "계정이 삭제되었습니다.");
         return "redirect:/";
     }
