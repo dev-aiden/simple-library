@@ -1,5 +1,6 @@
 package com.aiden.dev.simplelibrary.modules.book;
 
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -7,6 +8,8 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Getter @Setter @EqualsAndHashCode(of = "id")
+@Builder @AllArgsConstructor @NoArgsConstructor
 public class Book {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
