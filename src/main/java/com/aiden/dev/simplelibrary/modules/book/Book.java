@@ -26,7 +26,7 @@ public class Book {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Category category;
+    private BookCategory bookCategory;
 
     @Lob
     private String bookImage;

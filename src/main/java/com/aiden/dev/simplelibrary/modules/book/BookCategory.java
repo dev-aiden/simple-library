@@ -1,6 +1,6 @@
 package com.aiden.dev.simplelibrary.modules.book;
 
-public enum Category {
+public enum BookCategory {
     NOVEL("소설"),
     POETRY_ESSAY("시/에세이"),
     HUMANITIES("인문"),
@@ -13,7 +13,11 @@ public enum Category {
 
     private final String categoryName;
 
-    Category(String categoryName) {
+    BookCategory(String categoryName) {
         this.categoryName = categoryName;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
     }
 }
