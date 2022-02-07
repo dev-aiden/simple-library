@@ -22,7 +22,7 @@ public class BookService {
                 .author("김호연")
                 .publisher("나무옆의")
                 .bookCategory(BookCategory.NOVEL)
-                .bookImage("")
+                .bookImage(null)
                 .publicationDate(LocalDateTime.of(2021, 04, 20, 00, 00, 00))
                 .build();
         bookRepository.save(book1);
@@ -32,7 +32,7 @@ public class BookService {
                 .author("이미예")
                 .publisher("팩토리라인")
                 .bookCategory(BookCategory.NOVEL)
-                .bookImage("")
+                .bookImage(null)
                 .publicationDate(LocalDateTime.of(2021, 12, 25, 00, 00, 00))
                 .build();
         bookRepository.save(book2);
@@ -42,7 +42,7 @@ public class BookService {
                 .author("최은영")
                 .publisher("문학동네")
                 .bookCategory(BookCategory.NOVEL)
-                .bookImage("")
+                .bookImage(null)
                 .publicationDate(LocalDateTime.of(2021, 07, 27, 00, 00, 00))
                 .build();
         bookRepository.save(book3);

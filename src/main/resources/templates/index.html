@@ -26,6 +26,9 @@
         </div>
         <div class="col-5">
             <h3 th:text="${categoryName}"></h3>
+            <div class="row justify-content-center pt-3">
+                <div th:replace="fragments.html :: book-list (bookList=${bookList})"></div>
+            </div>
         </div>
     </div>
     <div th:replace="fragments.html :: footer"></div>

@@ -74,6 +74,23 @@
     <a class="list-group-item list-group-item-action list-group-item-danger" th:classappend="${currentMenu == 'account'}? active" th:href="@{/settings/account}">계정</a>
 </div>
 
+<div th:fragment="book-list (bookList)" class="col-sm-12">
+    <div class="row">
+        <div class="col-md-4" th:each="book : ${bookList}">
+            <a th:href="@{'/book/' + ${book.id}}" class="text-decoration-none" style="color:black">
+                <div class="card mb-4 shadow-sm">
+                    <img th:if="${!#strings.isEmpty(book.bookImage)}" th:src="${book.bookImage}" class="card-img-top" th:alt="${book.title}" >
+                    <img th:unless="${!#strings.isEmpty(book.bookImage)}" src="images/default_book.png" class="card-img-top" th:alt="${book.title}" >
+                    <div class="card-body">
+                        <p class="card-title context" th:text="${book.title}"></p>
+                        <p class="card-text" th:text="|${book.author} / ${book.publisher}|"></p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
 <footer th:fragment="footer" class="text-center">
     <div class="row justify-content-center navbar-light bg-light">
         <small class="d-block my-3 text-muted">Simple Library by Aiden &copy; 2021</small>
