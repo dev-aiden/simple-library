@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -54,5 +55,9 @@ public class BookService {
 
     public List<Book> getAllBooksByBookCategory(BookCategory bookCategory) {
         return bookRepository.findAllByBookCategory(bookCategory);
+    }
+
+    public Optional<Book> getBookDetail(Long bookId) {
+        return bookRepository.findById(bookId);
     }
 }

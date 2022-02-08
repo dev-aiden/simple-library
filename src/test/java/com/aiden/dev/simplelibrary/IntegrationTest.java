@@ -4,6 +4,8 @@ import com.aiden.dev.simplelibrary.modules.account.Account;
 import com.aiden.dev.simplelibrary.modules.account.AccountRepository;
 import com.aiden.dev.simplelibrary.modules.account.AccountService;
 import com.aiden.dev.simplelibrary.modules.account.form.SignUpForm;
+import com.aiden.dev.simplelibrary.modules.book.BookController;
+import com.aiden.dev.simplelibrary.modules.book.BookService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,6 +24,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -35,6 +38,8 @@ public class IntegrationTest {
     @Autowired MockMvc mockMvc;
     @Autowired AccountService accountService;
     @Autowired AccountRepository accountRepository;
+    @Autowired BookService bookService;
+    @Autowired BookController bookController;
 
     @BeforeEach
     void beforeEach() {
@@ -490,5 +495,21 @@ public class IntegrationTest {
                 .andExpect(unauthenticated());
 
         assertThat(accountRepository.findByLoginId("aiden").get().getPassword()).isNotEqualTo(originPassword);
+    }
+
+    @DisplayName("존재하지 않는 책으로 책 상세정보 조회 시 실패")
+    @Test
+    void detailBookForm_not_exist_book() {
+        assertThatThrownBy(() -> mockMvc.perform(get("/book/123")))
+                .hasCause(new IllegalArgumentException("123에 해당하는 책이 존재하지 않습니다."));
+    }
+
+    @DisplayName("존재하는 책으로로 책 상세정보 조회 시 성공")
+    @Test
+    void detailBookForm_exist_book() throws Exception {
+        mockMvc.perform(get("/book/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("book/detail"))
+                .andExpect(model().attributeExists("book"));
     }
 }

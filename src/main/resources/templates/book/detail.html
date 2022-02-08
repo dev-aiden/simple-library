@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments.html :: head"></head>
+<body>
+<div th:replace="fragments.html :: main-nav"></div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-sm-2">
+            <div class="row pt-3">
+                <img th:if="${!#strings.isEmpty(book.bookImage)}" th:src="${book.bookImage}" class="card-img-top" th:alt="${book.title}">
+                <img th:unless="${!#strings.isEmpty(book.bookImage)}" src="/images/default_book.png" class="card-img-top" th:alt="${book.title}">
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="row pt-3">
+                <label class="col-sm-2 col-form-label">제목</label>
+                <label class="col-sm-10 col-form-label" th:text="${book.title}"></label>
+            </div>
+            <div class="row pt-3">
+                <label class="col-sm-2 col-form-label">저자</label>
+                <label class="col-sm-10 col-form-label" th:text="${book.author}"></label>
+            </div>
+            <div class="row pt-3">
+                <label class="col-sm-2 col-form-label">출판사</label>
+                <label class="col-sm-10 col-form-label" th:text="${book.publisher}"></label>
+            </div>
+            <div class="row pt-3">
+                <label class="col-sm-2 col-form-label">출간일</label>
+                <label class="col-sm-10 col-form-label" th:text="${book.publicationDate}"></label>
+            </div>
+        </div>
+    </div>
+    <div th:replace="fragments.html :: footer"></div>
+</div>
+<script th:replace="fragments.html :: form-validation"></script>
+</body>
+</html>
