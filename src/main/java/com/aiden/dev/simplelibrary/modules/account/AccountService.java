@@ -44,7 +44,6 @@ public class AccountService implements UserDetailsService {
                 .email(signUpForm.getEmail())
                 .password(signUpForm.getPassword())
                 .build();
-        account.initNotificationSettings();
         account.generateEmailCheckToken();
         return accountRepository.save(account);
     }

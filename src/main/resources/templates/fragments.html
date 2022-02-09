@@ -84,6 +84,12 @@
                     <div class="card-body">
                         <p class="card-title context" th:text="${book.title}"></p>
                         <p class="card-text" th:text="|${book.author} / ${book.publisher}|"></p>
+                        <p th:if="${book.isLent}" th:style="'color: red'">
+                            <i class="fa fa-circle" aria-hidden="true"></i> 대출불가
+                        </p>
+                        <p th:if="${!book.isLent}" th:style="'color: green'">
+                            <i class="fa fa-circle" aria-hidden="true"></i> 대출가능
+                        </p>
                     </div>
                 </div>
             </a>

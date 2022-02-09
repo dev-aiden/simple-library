@@ -1,6 +1,7 @@
 package com.aiden.dev.simplelibrary.modules.account;
 
 import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.util.UUID;
 @Entity
 @Getter @Setter @EqualsAndHashCode(of = "id")
 @Builder @AllArgsConstructor @NoArgsConstructor
+@DynamicInsert
 public class Account {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,26 +40,23 @@ public class Account {
     @Lob
     private String profileImage;
 
+    @Column(columnDefinition="tinyint(1) default 0")
     private Boolean bookRentalNotificationByEmail;
 
+    @Column(columnDefinition="tinyint(1) default 1")
     private Boolean bookRentalNotificationByWeb;
 
+    @Column(columnDefinition="tinyint(1) default 0")
     private Boolean bookReturnNotificationByEmail;
 
+    @Column(columnDefinition="tinyint(1) default 1")
     private Boolean bookReturnNotificationByWeb;
 
+    @Column(columnDefinition="tinyint(1) default 0")
     private Boolean bookRentalAvailabilityNotificationByEmail;
 
+    @Column(columnDefinition="tinyint(1) default 1")
     private Boolean bookRentalAvailabilityNotificationByWeb;
-
-    public void initNotificationSettings() {
-        bookRentalNotificationByEmail = false;
-        bookRentalNotificationByWeb = true;
-        bookReturnNotificationByEmail = false;
-        bookReturnNotificationByWeb = true;
-        bookRentalAvailabilityNotificationByEmail = false;
-        bookRentalAvailabilityNotificationByWeb = true;
-    }
 
     public void generateEmailCheckToken() {
         this.emailVerified = false;
