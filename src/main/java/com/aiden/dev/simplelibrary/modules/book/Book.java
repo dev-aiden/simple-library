@@ -1,5 +1,7 @@
 package com.aiden.dev.simplelibrary.modules.book;
 
+import com.aiden.dev.simplelibrary.modules.account.Account;
+import com.aiden.dev.simplelibrary.modules.review.Review;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
@@ -7,6 +9,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter @Setter @EqualsAndHashCode(of = "id")
@@ -35,6 +39,12 @@ public class Book {
 
     @Column(nullable = false)
     private LocalDateTime publicationDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Account account;
+
+    @OneToMany(mappedBy = "book")
+    private List<Review> reviews = new ArrayList<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;

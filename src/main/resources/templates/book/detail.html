@@ -30,7 +30,7 @@
                 <label class="col-sm-10 col-form-label" th:text="${book.publicationDate}"></label>
             </div>
             <div class="row pt-3">
-                <button th:if="${book.isLent()}" type="button" class="btn btn-primary" disabled>대출하기</button>
+                <button th:if="${book.isLent()}" type="button" class="btn btn-primary" disabled>대출불가</button>
                 <button th:unless="${book.isLent()}" type="buttoon" class="btn btn-primary">대출하기</button>
             </div>
         </div>
